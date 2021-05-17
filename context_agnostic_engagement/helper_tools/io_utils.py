@@ -2,7 +2,7 @@ import pandas as pd
 
 MIN_NUM_SESSIONS = 5
 
-GEN_FEATURES = ['id', 'fold']
+GEN_FEATURES = ['id', 'fold', 'is_cs']
 
 CONT_COLS = ['categories', 'freshness',
              'auxiliary_rate', 'conjugate_rate', 'normalization_rate', 'tobe_verb_rate', 'preposition_rate',
@@ -146,6 +146,13 @@ def load_lecture_dataset(input_filepath, col_version=1):
     return lectures[columns]
 
 
+def get_cs_indexes(train, test):
+    train_cs_idx, test_cs_idx = train[train["is_cs"] == True].index, test[test["is_cs"] == True].index
+    train_ncs_idx, test_ncs_idx = train[train["is_cs"] == False].index, test[test["is_cs"] == False].index
+
+    return train_cs_idx, test_cs_idx, train_ncs_idx, test_ncs_idx
+
+
 def get_label_from_dataset(label_param):
     """gets actual label column name based on parameter
 
@@ -199,8 +206,9 @@ def get_features_from_dataset(col_cat, lectures):
     return columns, lectures
 
 
-def get_fold_from_dataset(lectures, fold):
-    fold_train_df = lectures[lectures["fold"] != fold].reset_index(drop=True)
+def get_fold_from_dataset(lectures, fold, sample=1.):
+    fold_train_df = lectures[lectures["fold"] != fold].sample(frac=sample, replace=False, random_state=42).reset_index(
+        drop=True)
     fold_test_df = lectures[lectures["fold"] == fold].reset_index(drop=True)
 
     return fold_train_df, fold_test_df
